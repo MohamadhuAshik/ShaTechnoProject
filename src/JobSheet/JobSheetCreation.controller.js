@@ -1,4 +1,4 @@
-const { getSelectedProductTypeMaster, getJobSheet, getProjectDetails, postCompanyMaster } = require("./JobSheet.services")
+const { getSelectedProductTypeMaster, getJobSheet, getProjectDetails, postCompanyMaster, getJobSheetDataDateBetween } = require("./JobSheet.services")
 
 
 module.exports = {
@@ -79,17 +79,47 @@ module.exports = {
             else if (result == "Enter Different ProjectName") {
                 return res.status(403).json({
                     success: 0,
-                    message: "Plese select the valid project name to logout"
+                    message: "Plese select the valid project name"
                 })
             }
 
             else if (result === 1) {
                 return res.status(200).json({
                     success: 1,
-                    message: "Post SuccessFully"
+                    message: "Post SuccessFully",
+
                 })
             }
 
+        })
+    },
+
+    getJobSheetDataTwoDateBetween: (req, res) => {
+        // const body = req.body
+        getJobSheetDataDateBetween(req, (err, result) => {
+            if (err) {
+                return res.status(500).json({
+                    success: 0,
+                    message: "Internal Server Error",
+                    err: err
+                })
+            }
+            if (result === "Enter Dates") {
+                return res.status(404).json({
+                    success: 0,
+                    message: "You Must Enter StartDate And EndDate"
+                })
+            }
+            if (result === "userNotFound") {
+                return res.status(404).json({
+                    success: 0,
+                    message: "User Not Found"
+                })
+            }
+            return res.status(200).json({
+                success: 1,
+                data: result
+            })
         })
     }
 }

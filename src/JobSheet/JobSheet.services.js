@@ -3,6 +3,7 @@ const sql = require('mssql');
 const moment = require('moment');
 const { sendPushNotification } = require('../PushNotification/PushNotifiy');
 
+
 // const { postCompanyMaster } = require('./JobSheetCreation.controller');
 
 //[dbo].[MB_Jobsheet] insert Logic
@@ -38,10 +39,16 @@ const postCompanyMasterInsertFunction = async (CompanyType, ProjectType, PhotoTy
     }
 
   })
+
   return callback(null, response.rowsAffected[0]);
 }
 
+//Gathering Notification Related Data's from DB
 const userResponseDetails = async (ProjectType, user_id, PhotoType, Location, request) => {
+  console.log("ProjectType", ProjectType)
+  console.log("user_id", user_id)
+  console.log("PhotoType", PhotoType)
+  console.log("Location", Location)
   const result = {}
 
   let projectTypeQuery = `select ProjectType from ProjectTypeMaster where ProjectTypeId = @ProjectTypeValue`;
@@ -64,7 +71,6 @@ const userResponseDetails = async (ProjectType, user_id, PhotoType, Location, re
   result.userId = user_id
   return result
 }
-
 
 
 module.exports = {
@@ -110,6 +116,139 @@ module.exports = {
       return callback(err)
     }
   },
+
+  postCompanyMaster: async (data, callback) => {
+    try {
+      const { CompanyType, ProjectType, PhotoType, Job, ProjectName, Location, ImageUpload, user_id } = data
+
+      const request = model.db.request();
+
+      const createdDate = moment(ImageUpload[0].dateTime).utcOffset("+05:30").format('YYYY-MM-DD HH:mm:ss');
+
+      let query = `Select CreatedBy,EntryTime ,ProjectTypeId,CompanyType,PhotoTypeId from MB_Jobsheet where CreatedBy = @user_id And CONVERT(DATE, EntryTime) = @createdDate order by Id`
+
+      request
+        .input("user_id", user_id)
+        .input("createdDate", createdDate.split(" ")[0])
+      const firstCheckResponse = await request.query(query);
+
+      if (firstCheckResponse.recordset.length > 0) {
+        const recordSetLength = firstCheckResponse.recordset.length
+        const lastrecard = firstCheckResponse.recordset[recordSetLength - 1]
+        console.log("lastrecard", lastrecard)
+
+        if (lastrecard.ProjectTypeId === ProjectType) {
+
+          if (lastrecard.PhotoTypeId === 1 && PhotoType === 1) {
+            const dateObject = new Date(createdDate.replace(' ', 'T'));
+            console.log("dateObject", dateObject)
+            const currentHour = dateObject.getHours();
+
+            //user enterstarttime after 8pm
+            if (currentHour >= 20) {
+              return postCompanyMasterInsertFunction(CompanyType, ProjectType, PhotoType, Job, ProjectName, Location, ImageUpload[0].path, user_id, createdDate, request, callback)
+            } else {
+              return callback(null, "Record exists");
+            }
+          }
+
+          if (lastrecard.PhotoTypeId === 2 && PhotoType === 1) {
+
+            return postCompanyMasterInsertFunction(CompanyType, ProjectType, PhotoType, Job, ProjectName, Location, ImageUpload[0].path, user_id, createdDate, request, callback)
+          }
+
+          if (lastrecard.PhotoTypeId === 2 && PhotoType === 3) {
+            return callback(null, "give startTime")
+          }
+
+          if (lastrecard.PhotoTypeId === 3 && PhotoType === 2) {
+
+            return postCompanyMasterInsertFunction(CompanyType, ProjectType, PhotoType, Job, ProjectName, Location, ImageUpload[0].path, user_id, createdDate, request, callback)
+          }
+
+          if (lastrecard.PhotoTypeId === 3 && PhotoType === 1) {
+            return callback(null, "Record exists")
+          }
+
+          if (lastrecard.PhotoTypeId === 3 && PhotoType === 3) {
+
+            return postCompanyMasterInsertFunction(CompanyType, ProjectType, PhotoType, Job, ProjectName, Location, ImageUpload[0].path, user_id, createdDate, request, callback)
+          }
+
+          if (lastrecard.PhotoTypeId === 2 && PhotoType === 2) {
+            return callback(null, "give startTime")
+          }
+
+          if (lastrecard.PhotoTypeId === 1 && PhotoType === 3) {
+            postCompanyMasterInsertFunction(CompanyType, ProjectType, PhotoType, Job, ProjectName, Location, ImageUpload[0].path, user_id, createdDate, request, callback)
+          }
+          if (lastrecard.PhotoTypeId === 1 && PhotoType === 2) {
+            postCompanyMasterInsertFunction(CompanyType, ProjectType, PhotoType, Job, ProjectName, Location, ImageUpload[0].path, user_id, createdDate, request, callback)
+          }
+
+        } else {
+          if (lastrecard.PhotoTypeId === 2) {
+            if (PhotoType === 1) {
+              postCompanyMasterInsertFunction(CompanyType, ProjectType, PhotoType, Job, ProjectName, Location, ImageUpload[0].path, user_id, createdDate, request, callback)
+            } else {
+              return callback(null, "give startTime")
+            }
+
+          } else {
+            return callback(null, "Enter Different ProjectName")
+          }
+        }
+
+
+
+      } else {
+        if (PhotoType === 2 || PhotoType === 3) {
+          return callback(null, "give startTime")
+        } else {
+          postCompanyMasterInsertFunction(CompanyType, ProjectType, PhotoType, Job, ProjectName, Location, ImageUpload[0].path, user_id, createdDate, request, callback)
+        }
+      }
+
+    } catch (err) {
+      console.log(err)
+      return callback(err)
+    }
+  },
+
+  getJobSheetDataDateBetween: async (req, callback) => {
+    try {
+      const { startdate, enddate } = req.body
+
+      if (!startdate || !enddate) {
+        return callback(null, "Enter Dates")
+      }
+      const request = model.db.request();
+
+      let query = `SELECT  MBJ.Id,MBJ.CompanyType ,PTM.ProjectType,PTI.PhotoType,JSM.JobSheetId,PD.ProjectName,MBJ.Location,CONCAT('images/',  REPLACE(MBJ.ImageUpload, 'uploads\\', '')) AS ImageUpload,MBJ.IsActive,UMD.UserName,MBJ.CreatedDate,MBJ.ModifiedBy,MBJ.ModifiedDate,MBJ.EntryTime FROM MB_Jobsheet MBJ
+      LEFT JOIN ProjectTypeMaster PTM ON MBJ.ProjectTypeId = PTM.ProjectTypeId
+      LEFT JOIN PhotoTypeID PTI ON MBJ.PhotoTypeId = PTI.PhotoTypeId
+      LEFT JOIN JobSheetMaster JSM ON MBJ.JobId = JSM.JobSheetMasterId
+      LEFT JOIN ProjectDetails PD ON MBJ.ProjectName = PD.ProjectId
+      LEFT JOIN UserMasterDetail UMD ON MBJ.CreatedBy = UMD.Userid
+      WHERE CONVERT(DATE, MBJ.EntryTime) BETWEEN @startdate AND @enddate ORDER BY MBJ.Id`
+
+      request
+        .input("startdate", startdate)
+        .input("enddate", enddate)
+
+      const dateBetWeenDatas = await request.query(query)
+      // console.log("dateBetWeenDatas", dateBetWeenDatas.recordset)
+      if (dateBetWeenDatas.recordset.length === 0) {
+        return callback(null, dateBetWeenDatas.recordset)
+      }
+
+      return callback(null, dateBetWeenDatas.recordset)
+    } catch (err) {
+      console.log(err)
+      return callback(err)
+    }
+  }
+
 
   // postCompanyMaster: async (data, callback) => {
   //   // console.log("data", data)
@@ -207,165 +346,128 @@ module.exports = {
   //   }
   // } 
 
-  postCompanyMaster: async (data, callback) => {
-    // console.log("data", data)
-    const { CompanyType, ProjectType, PhotoType, Job, ProjectName, Location, ImageUpload, user_id } = data
-    try {
-      const request = model.db.request();
-
-      const createdDate = moment(ImageUpload[0].dateTime).utcOffset("+05:30").format('YYYY-MM-DD HH:mm:ss');
-
-      let query = `Select CreatedBy,EntryTime ,ProjectTypeId,CompanyType,PhotoTypeId from MB_Jobsheet where CreatedBy = @user_id And CONVERT(DATE, EntryTime) = @createdDate`
-
-      request
-        .input("user_id", user_id)
-        .input("createdDate", createdDate.split(" ")[0])
-
-      const firstCheckResponse = await request.query(query);
-      // console.log("firstCheckResponse.recordset[0]", firstCheckResponse.recordset)
-      if (firstCheckResponse.recordset.length > 0) {
-
-        const recordSetLength = firstCheckResponse.recordset.length
-        const firstRecord = firstCheckResponse.recordset[0];
-        const lastRecord = firstCheckResponse.recordset[recordSetLength - 1];
-
-        // console.log("lastRecord", lastRecord)
-
-        let query = `select CreatedBy,EntryTime ,ProjectTypeId,CompanyType,PhotoTypeId from MB_Jobsheet where ProjectTypeId = @ProjectType And PhotoTypeId IN (1, 2 , 3)`
-
-        request
-          .input("ProjectType", ProjectType)
-        const response = await request.query(query)
-        // console.log("response.recordset[0]", response.recordset)
-        if (response.recordset.length > 0) {
-
-          const recordSetLength = response.recordset.length
-          // console.log(response.recordset[0])
-          const lastRecord = response.recordset[recordSetLength - 1];
-          // console.log("lastRecord", lastRecord)
-
-
-
-          console.log(lastRecord)
-          if (lastRecord.PhotoTypeId === 1 && PhotoType === 2 || lastRecord.PhotoTypeId === 1 && PhotoType === 3) {
-            return postCompanyMasterInsertFunction(CompanyType, ProjectType, PhotoType, Job, ProjectName, Location, ImageUpload[0].path, user_id, createdDate, request, callback)
-          }
-
-          if (lastRecord.PhotoTypeId === 1 && PhotoType === 1) {
-            const dateObject = new Date(createdDate.replace(' ', 'T'));
-            console.log("dateObject", dateObject)
-            const currentHour = dateObject.getHours();
-
-            //user enterstarttime after 8pm
-            if (currentHour >= 20) {
-              return postCompanyMasterInsertFunction(CompanyType, ProjectType, PhotoType, Job, ProjectName, Location, ImageUpload[0].path, user_id, createdDate, request, callback)
-            } else {
-              return callback(null, "Record exists");
-            }
-          }
-
-          if (lastRecord.PhotoTypeId === 2 && PhotoType === 1) {
-
-            return postCompanyMasterInsertFunction(CompanyType, ProjectType, PhotoType, Job, ProjectName, Location, ImageUpload[0].path, user_id, createdDate, request, callback)
-          }
-
-          if (lastRecord.PhotoTypeId === 2 && PhotoType === 3) {
-            return callback(null, "give startTime")
-          }
-
-          if (lastRecord.PhotoTypeId === 3 && PhotoType === 2) {
-
-            return postCompanyMasterInsertFunction(CompanyType, ProjectType, PhotoType, Job, ProjectName, Location, ImageUpload[0].path, user_id, createdDate, request, callback)
-          }
-
-          if (lastRecord.PhotoTypeId === 3 && PhotoType === 1) {
-            return callback(null, "Record exists")
-          }
-          if (lastRecord.PhotoTypeId === 3 && PhotoType === 3) {
-
-            return postCompanyMasterInsertFunction(CompanyType, ProjectType, PhotoType, Job, ProjectName, Location, ImageUpload[0].path, user_id, createdDate, request, callback)
-          }
-
-          if (lastRecord.PhotoTypeId === 2 && PhotoType === 2) {
-            return callback(null, "give startTime")
-          }
-
-        }
-
-        else {
-          /*   console.log("hiii")
-            let query = `select CreatedBy,EntryTime ,ProjectTypeId,CompanyType,PhotoTypeId from MB_Jobsheet where  PhotoTypeId IN (1, 2, 3)`
-  
-  
-            const firstCheckResponse = await request.query(query);
-  
-            console.log("firstCheckResponse0", firstCheckResponse.recordset)
-            if (firstCheckResponse.recordset.length > 0) {
-  
-              const length = firstCheckResponse.recordset.length
-              console.log(firstCheckResponse.recordset)
-              const lastRecord = firstCheckResponse.recordset[length - 1]
-              console.log("lastREcord", lastRecord)
-  
-              if (lastRecord.PhotoTypeId === 2 && PhotoType === 1) {
-                return postCompanyMasterInsertFunction(CompanyType, ProjectType, PhotoType, Job, ProjectName, Location, ImageUpload[0].path, user_id, createdDate, request, callback)
-              }
-  
-  
-              if (lastRecord.PhotoTypeId === 1) {
-                console.log("hello")
-                return callback(null, "Enter Different ProjectName")
-              }
-  
-              if (PhotoType !== 1) {
-                return callback(null, "give startTime")
-              }
-              if (lastRecord.PhotoTypeId === 1) {
-                console.log("hello")
-                return callback(null, "Enter Different ProjectName")
-              }
-  
-            } else {
-  
-              return callback(null, "Enter Different ProjectName")
-            }
-  
-  
-   */
-          console.log("hiii")
-          console.log(lastRecord)
-          if (lastRecord.PhotoTypeId !== 2) {
-            return callback(null, "Enter Different ProjectName")
-          }
-          if (lastRecord.PhotoTypeId === 2 && PhotoType === 1) {
-            return postCompanyMasterInsertFunction(CompanyType, ProjectType, PhotoType, Job, ProjectName, Location, ImageUpload[0].path, user_id, createdDate, request, callback)
-          }
-
-          if (lastRecord.PhotoTypeId === 2 && PhotoType !== 1) {
-            return callback(null, "give startTime")
-          }
-          if (lastRecord.PhotoTypeId === 1) {
-            console.log("hello")
-            return callback(null, "Enter Different ProjectName")
-          }
-
-        }
-
-      }
-
-
-
-      else {
-        if (PhotoType === 2 || PhotoType === 3) {
-          return callback(null, "give startTime")
-        } else {
-          postCompanyMasterInsertFunction(CompanyType, ProjectType, PhotoType, Job, ProjectName, Location, ImageUpload[0].path, user_id, createdDate, request, callback)
-        }
-      }
-    } catch (err) {
-      return callback(err)
-    }
-  },
+  /*  postCompanyMaster2: async (data, callback) => {
+     // console.log("data", data)
+     const { CompanyType, ProjectType, PhotoType, Job, ProjectName, Location, ImageUpload, user_id } = data
+     try {
+       const request = model.db.request();
+ 
+       const createdDate = moment(ImageUpload[0].dateTime).utcOffset("+05:30").format('YYYY-MM-DD HH:mm:ss');
+ 
+       let query = `Select CreatedBy,EntryTime ,ProjectTypeId,CompanyType,PhotoTypeId from MB_Jobsheet where CreatedBy = @user_id And CONVERT(DATE, EntryTime) = @createdDate`
+ 
+       request
+         .input("user_id", user_id)
+         .input("createdDate", createdDate.split(" ")[0])
+ 
+       const firstCheckResponse = await request.query(query);
+       // console.log("firstCheckResponse.recordset[0]", firstCheckResponse.recordset)
+       if (firstCheckResponse.recordset.length > 0) {
+ 
+         const recordSetLength = firstCheckResponse.recordset.length
+         const firstRecord = firstCheckResponse.recordset[0];
+         const lastRecord = firstCheckResponse.recordset[recordSetLength - 1];
+ 
+         // console.log("lastRecord", lastRecord)
+ 
+         let query = `select CreatedBy,EntryTime ,ProjectTypeId,CompanyType,PhotoTypeId from MB_Jobsheet where ProjectTypeId = @ProjectType And PhotoTypeId IN (1, 2 , 3)`
+ 
+         request
+           .input("ProjectType", ProjectType)
+         const response = await request.query(query)
+         // console.log("response.recordset[0]", response.recordset)
+         if (response.recordset.length > 0) {
+ 
+           const recordSetLength = response.recordset.length
+           // console.log(response.recordset[0])
+           const lastRecord = response.recordset[recordSetLength - 1];
+           // console.log("lastRecord", lastRecord)
+ 
+ 
+ 
+           console.log(lastRecord)
+           if (lastRecord.PhotoTypeId === 1 && PhotoType === 2 || lastRecord.PhotoTypeId === 1 && PhotoType === 3) {
+             return postCompanyMasterInsertFunction(CompanyType, ProjectType, PhotoType, Job, ProjectName, Location, ImageUpload[0].path, user_id, createdDate, request, callback)
+           }
+ 
+           if (lastRecord.PhotoTypeId === 1 && PhotoType === 1) {
+             const dateObject = new Date(createdDate.replace(' ', 'T'));
+             console.log("dateObject", dateObject)
+             const currentHour = dateObject.getHours();
+ 
+             //user enterstarttime after 8pm
+             if (currentHour >= 20) {
+               return postCompanyMasterInsertFunction(CompanyType, ProjectType, PhotoType, Job, ProjectName, Location, ImageUpload[0].path, user_id, createdDate, request, callback)
+             } else {
+               return callback(null, "Record exists");
+             }
+           }
+ 
+           if (lastRecord.PhotoTypeId === 2 && PhotoType === 1) {
+ 
+             return postCompanyMasterInsertFunction(CompanyType, ProjectType, PhotoType, Job, ProjectName, Location, ImageUpload[0].path, user_id, createdDate, request, callback)
+           }
+ 
+           if (lastRecord.PhotoTypeId === 2 && PhotoType === 3) {
+             return callback(null, "give startTime")
+           }
+ 
+           if (lastRecord.PhotoTypeId === 3 && PhotoType === 2) {
+ 
+             return postCompanyMasterInsertFunction(CompanyType, ProjectType, PhotoType, Job, ProjectName, Location, ImageUpload[0].path, user_id, createdDate, request, callback)
+           }
+ 
+           if (lastRecord.PhotoTypeId === 3 && PhotoType === 1) {
+             return callback(null, "Record exists")
+           }
+ 
+           if (lastRecord.PhotoTypeId === 3 && PhotoType === 3) {
+ 
+             return postCompanyMasterInsertFunction(CompanyType, ProjectType, PhotoType, Job, ProjectName, Location, ImageUpload[0].path, user_id, createdDate, request, callback)
+           }
+ 
+           if (lastRecord.PhotoTypeId === 2 && PhotoType === 2) {
+             return callback(null, "give startTime")
+           }
+ 
+         }
+ 
+         else {
+         
+           console.log("hiii")
+           console.log(lastRecord)
+           if (lastRecord.PhotoTypeId !== 2) {
+             return callback(null, "Enter Different ProjectName")
+           }
+           if (lastRecord.PhotoTypeId === 2 && PhotoType === 1) {
+             return postCompanyMasterInsertFunction(CompanyType, ProjectType, PhotoType, Job, ProjectName, Location, ImageUpload[0].path, user_id, createdDate, request, callback)
+           }
+ 
+           if (lastRecord.PhotoTypeId === 2 && PhotoType !== 1) {
+             return callback(null, "give startTime")
+           }
+           if (lastRecord.PhotoTypeId === 1) {
+             console.log("hello")
+             return callback(null, "Enter Different ProjectName")
+           }
+ 
+         }
+ 
+       }
+ 
+ 
+ 
+       else {
+         if (PhotoType === 2 || PhotoType === 3) {
+           return callback(null, "give startTime")
+         } else {
+           postCompanyMasterInsertFunction(CompanyType, ProjectType, PhotoType, Job, ProjectName, Location, ImageUpload[0].path, user_id, createdDate, request, callback)
+         }
+       }
+     } catch (err) {
+       return callback(err)
+     }
+   }, */
 
   // postCompanyMaster: async (data, callback) => {
   //   const { CompanyType, ProjectType, PhotoType, Job, ProjectName, Location, ImageUpload, user_id } = data
@@ -516,7 +618,7 @@ module.exports = {
   //     callback(err)
   //   }
   // }
-  postCompanyMaster1: async (data, callback) => {
+  /* postCompanyMaster1: async (data, callback) => {
     const { CompanyType, ProjectType, PhotoType, Job, ProjectName, Location, ImageUpload, user_id } = data
     try {
       const request = model.db.request();
@@ -635,6 +737,7 @@ module.exports = {
       console.log(err)
       return callback(err)
     }
-  }
+  }, */
+
 
 }

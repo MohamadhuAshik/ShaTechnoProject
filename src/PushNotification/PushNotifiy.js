@@ -24,7 +24,7 @@ module.exports = {
             const request = model.db.request();
             // let query = `SELECT FCMToken FROM UserMasterDetail WHERE Userid = @Userid;`
             // request.input("Userid", sql.Int, userId)
-            let query = `SELECT FCMToken FROM UserMasterDetail WHERE Userid IN (6,8)`
+            let query = `SELECT userName, FCMToken FROM UserMasterDetail WHERE userName IN ('IC002')`
             const response = await request.query(query)
             console.log("response.recordset", response.recordset)
             if (response.recordset.length > 0) {
@@ -33,6 +33,7 @@ module.exports = {
                 // }
 
                 response.recordset.forEach(async (token) => {
+
                     const payload = {
                         token: token.FCMToken,
                         notification: {
@@ -44,17 +45,24 @@ module.exports = {
                         }
 
                     };
-                    const result = await admin.messaging().send(payload);
-                    return callback(null, result)
+                    try {
+                        const result = await admin.messaging().send(payload);
+                        return callback(null, result)
+                    } catch (err) {
+                        if (err.code === 'messaging/registration-token-not-registered') {
+                            console.error('Token not registered.');
+                        } else {
+                            console.error('Error sending message:', err);
+                        }
+                    }
                 })
-
 
             } else {
                 callback(null, "userNotFount")
             }
 
         } catch (err) {
-            console.log(err)
+            console.log("err", err)
             return callback(err)
         }
 

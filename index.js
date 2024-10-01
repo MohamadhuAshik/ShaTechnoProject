@@ -18,6 +18,7 @@ app.use(cors({
 
 app.use(body_parser.json())
 
+app.use("/images", express.static("uploads"));
 
 
 app.get('/', (req, res) => {
