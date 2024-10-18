@@ -8,6 +8,7 @@ const { sendPushNotification } = require('../PushNotification/PushNotifiy');
 
 //[dbo].[MB_Jobsheet] insert Logic
 const postCompanyMasterInsertFunction = async (CompanyType, ProjectType, PhotoType, Job, ProjectName, Location, ImageUpload, user_id, createdDate, request, callback) => {
+  console.log("createdDate", createdDate)
 
   let postquery = `insert into MB_Jobsheet (CompanyType,ProjectTypeId,PhotoTypeId,JobId,ProjectName,Location,ImageUpload,CreatedBy,createdDate,EntryTime) values (
     @CompanyType, @projectTypeIdValue, @photoTypeIdvalue, @jobIdvalue, @ProjectName, @Location, @ImageUpload,@CreatedBy,@createdDateValue,@EntryTimeValue)`;
@@ -123,7 +124,12 @@ module.exports = {
 
       const request = model.db.request();
 
-      const createdDate = moment(ImageUpload[0].dateTime).utcOffset("+05:30").format('YYYY-MM-DD HH:mm:ss');
+      // const createdDate = moment(ImageUpload[0].dateTime).utcOffset("+05:30").format('YYYY-MM-DD HH:mm:ss');
+      // console.log("createdDateInner", createdDate)
+
+      const createdDate = ImageUpload[0].dateTime
+
+      console.log("createdDateInner", createdDate)
 
       let query = `Select CreatedBy,EntryTime ,ProjectTypeId,CompanyType,PhotoTypeId from MB_Jobsheet where CreatedBy = @user_id And CONVERT(DATE, EntryTime) = @createdDate order by Id`
 

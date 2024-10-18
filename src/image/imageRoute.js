@@ -8,6 +8,7 @@ router.post('/timeUpload', upload.array('photos', 10), async (req, res) => {
 
     try {
         const data = [...req.files];
+        console.log("dataArray", data)
         const times = Array.isArray(req.body.time) ? req.body.time : [req.body.time];
 
         console.log("times", times)
@@ -30,6 +31,7 @@ router.post('/timeUpload', upload.array('photos', 10), async (req, res) => {
                     "latitude": latitudeArray[index]
                 };
             });
+            console.log("updatedData", updatedData)
             res.json({
                 status: 200,
                 message: "Image Uploaded",

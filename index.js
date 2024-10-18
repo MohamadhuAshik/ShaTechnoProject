@@ -38,7 +38,7 @@ app.use("/jobSheet", jobSheet)
 // app.use("/notify", notify)
 
 
-const port = 4000;
+const port = 4002;
 
 app.listen(port, () => {
     console.log(`server is running on port ${port}`)
