@@ -24,7 +24,7 @@ module.exports = {
             const request = model.db.request();
             // let query = `SELECT FCMToken FROM UserMasterDetail WHERE Userid = @Userid;`
             // request.input("Userid", sql.Int, userId)
-            let query = `SELECT userName, FCMToken FROM UserMasterDetail WHERE userName IN ('IC002')`
+            let query = `SELECT userName, FCMToken FROM UserMasterDetail WHERE userName IN ('IC002','G5024857M')`
             const response = await request.query(query)
             console.log("response.recordset", response.recordset)
             if (response.recordset.length > 0) {
