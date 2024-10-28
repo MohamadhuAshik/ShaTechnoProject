@@ -110,7 +110,8 @@ module.exports = {
   getProjectDetails: async (callback) => {
     try {
       const request = model.db.request();
-      let query = `SELECT ProjectId ,ProjectName, ProjectLocation FROM ProjectDetails`;
+      // console.log("request", request)
+      let query = `SELECT ProjectId ,ProjectName, ProjectLocation FROM ProjectDetails`;//ProjectDetails
       const response = await request.query(query);
       return callback(null, response.recordset);
     } catch (err) {

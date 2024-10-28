@@ -8,10 +8,11 @@ const config = {
     // database: 'prod-shatechnosolutions',
     // user: 'shatechno-proddev',
     // password: 'gXM5KMeAx',
+
     // database: 'dev.shatechno',
     // user: 'dev.shatechno', 
     // password: '7!jYo787n',
-    database: 'prod-shatechnosolutions',
+    database: 'dev.shatechno',
     user: 'dev.shatechno',
     password: '7!jYo787n',
     options: {
