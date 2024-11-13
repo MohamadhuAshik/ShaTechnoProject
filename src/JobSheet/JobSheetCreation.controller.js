@@ -1,4 +1,5 @@
-const { getSelectedProductTypeMaster, getJobSheet, getProjectDetails, postCompanyMaster, getJobSheetDataDateBetween } = require("./JobSheet.services")
+const { param } = require("./JobSheet.routes")
+const { getSelectedProductTypeMaster, getJobSheet, getProjectDetails, postCompanyMaster, getJobSheetDataDateBetween, getDevisionDropdown, getJobsheetByDivisionID } = require("./JobSheet.services")
 
 
 module.exports = {
@@ -121,5 +122,41 @@ module.exports = {
                 data: result
             })
         })
+    },
+
+    getDivisionDrobDown: (req, res) => {
+        getDevisionDropdown((err, result) => {
+            if (err) {
+                return res.status(500).json({
+                    success: 0,
+                    message: "Internal Server Error",
+                    err: err
+                })
+            }
+            return res.status(200).json({
+                success: 1,
+                data: result
+            })
+        })
+    },
+
+    getJobsheetByDivisionID: (req, res) => {
+        const params = req.params
+        getJobsheetByDivisionID(params, (err, result) => {
+            if (err) {
+                return res.status(500).json({
+                    success: 0,
+                    message: "Internal Server Error",
+                    err: err
+                })
+            }
+            return res.status(200).json({
+                success: 1,
+                data: result
+            })
+
+
+        })
     }
+
 }

@@ -7,11 +7,11 @@ const { sendPushNotification } = require('../PushNotification/PushNotifiy');
 // const { postCompanyMaster } = require('./JobSheetCreation.controller');
 
 //[dbo].[MB_Jobsheet] insert Logic
-const postCompanyMasterInsertFunction = async (CompanyType, ProjectType, PhotoType, Job, ProjectName, Location, ImageUpload, user_id, createdDate, request, callback) => {
+const postCompanyMasterInsertFunction = async (CompanyType, ProjectType, PhotoType, Job, ProjectName, Location, ImageUpload, user_id, createdDate, request, callback, devisionId) => {
   console.log("createdDate", createdDate)
 
-  let postquery = `insert into MB_Jobsheet (CompanyType,ProjectTypeId,PhotoTypeId,JobId,ProjectName,Location,ImageUpload,CreatedBy,createdDate,EntryTime) values (
-    @CompanyType, @projectTypeIdValue, @photoTypeIdvalue, @jobIdvalue, @ProjectName, @Location, @ImageUpload,@CreatedBy,@createdDateValue,@EntryTimeValue)`;
+  let postquery = `insert into MB_Jobsheet (CompanyType,ProjectTypeId,PhotoTypeId,JobId,ProjectName,Location,ImageUpload,CreatedBy,createdDate,EntryTime,DivisionId) values (
+    @CompanyType, @projectTypeIdValue, @photoTypeIdvalue, @jobIdvalue, @ProjectName, @Location, @ImageUpload,@CreatedBy,@createdDateValue,@EntryTimeValue,@devisionId)`;
 
   request
     .input('CompanyType', sql.VarChar(50), CompanyType)
@@ -24,6 +24,7 @@ const postCompanyMasterInsertFunction = async (CompanyType, ProjectType, PhotoTy
     .input("CreatedBy", sql.Int, user_id)
     .input("createdDateValue", moment().format('YYYY-MM-DD HH:mm:ss'))
     .input("EntryTimeValue", createdDate)
+    .input("devisionId", sql.Int, devisionId)
 
 
   const response = await request.query(postquery);
@@ -99,7 +100,7 @@ module.exports = {
 
     try {
       const request = model.db.request();
-      let query = `SELECT JobSheetMasterId ,JobSheetId, Location FROM JobSheetMaster`;
+      let query = `SELECT JobSheetMasterId ,JobSheetId, Location FROM JobSheetMaster where IsActive =1 And ShowInMobile=1`;
       const response = await request.query(query);
       return callback(null, response.recordset);
     } catch (err) {
@@ -111,7 +112,7 @@ module.exports = {
     try {
       const request = model.db.request();
       // console.log("request", request)
-      let query = `SELECT ProjectId ,ProjectName, ProjectLocation FROM ProjectDetails`;//ProjectDetails
+      let query = `SELECT ProjectId ,ProjectName, ProjectLocation FROM ProjectDetails where ShowInMobile=1`;//ProjectDetails
       const response = await request.query(query);
       return callback(null, response.recordset);
     } catch (err) {
@@ -121,7 +122,7 @@ module.exports = {
 
   postCompanyMaster: async (data, callback) => {
     try {
-      const { CompanyType, ProjectType, PhotoType, Job, ProjectName, Location, ImageUpload, user_id } = data
+      const { CompanyType, ProjectType, PhotoType, Job, ProjectName, Location, ImageUpload, user_id, devisionId } = data
 
       const request = model.db.request();
 
@@ -153,7 +154,7 @@ module.exports = {
 
             //user enterstarttime after 8pm
             if (currentHour >= 20) {
-              return postCompanyMasterInsertFunction(CompanyType, ProjectType, PhotoType, Job, ProjectName, Location, ImageUpload[0].path, user_id, createdDate, request, callback)
+              return postCompanyMasterInsertFunction(CompanyType, ProjectType, PhotoType, Job, ProjectName, Location, ImageUpload[0].path, user_id, createdDate, request, callback, devisionId)
             } else {
               return callback(null, "Record exists");
             }
@@ -161,7 +162,7 @@ module.exports = {
 
           if (lastrecard.PhotoTypeId === 2 && PhotoType === 1) {
 
-            return postCompanyMasterInsertFunction(CompanyType, ProjectType, PhotoType, Job, ProjectName, Location, ImageUpload[0].path, user_id, createdDate, request, callback)
+            return postCompanyMasterInsertFunction(CompanyType, ProjectType, PhotoType, Job, ProjectName, Location, ImageUpload[0].path, user_id, createdDate, request, callback, devisionId)
           }
 
           if (lastrecard.PhotoTypeId === 2 && PhotoType === 3) {
@@ -170,7 +171,7 @@ module.exports = {
 
           if (lastrecard.PhotoTypeId === 3 && PhotoType === 2) {
 
-            return postCompanyMasterInsertFunction(CompanyType, ProjectType, PhotoType, Job, ProjectName, Location, ImageUpload[0].path, user_id, createdDate, request, callback)
+            return postCompanyMasterInsertFunction(CompanyType, ProjectType, PhotoType, Job, ProjectName, Location, ImageUpload[0].path, user_id, createdDate, request, callback, devisionId)
           }
 
           if (lastrecard.PhotoTypeId === 3 && PhotoType === 1) {
@@ -179,7 +180,7 @@ module.exports = {
 
           if (lastrecard.PhotoTypeId === 3 && PhotoType === 3) {
 
-            return postCompanyMasterInsertFunction(CompanyType, ProjectType, PhotoType, Job, ProjectName, Location, ImageUpload[0].path, user_id, createdDate, request, callback)
+            return postCompanyMasterInsertFunction(CompanyType, ProjectType, PhotoType, Job, ProjectName, Location, ImageUpload[0].path, user_id, createdDate, request, callback, devisionId)
           }
 
           if (lastrecard.PhotoTypeId === 2 && PhotoType === 2) {
@@ -187,16 +188,16 @@ module.exports = {
           }
 
           if (lastrecard.PhotoTypeId === 1 && PhotoType === 3) {
-            postCompanyMasterInsertFunction(CompanyType, ProjectType, PhotoType, Job, ProjectName, Location, ImageUpload[0].path, user_id, createdDate, request, callback)
+            postCompanyMasterInsertFunction(CompanyType, ProjectType, PhotoType, Job, ProjectName, Location, ImageUpload[0].path, user_id, createdDate, request, callback, devisionId)
           }
           if (lastrecard.PhotoTypeId === 1 && PhotoType === 2) {
-            postCompanyMasterInsertFunction(CompanyType, ProjectType, PhotoType, Job, ProjectName, Location, ImageUpload[0].path, user_id, createdDate, request, callback)
+            postCompanyMasterInsertFunction(CompanyType, ProjectType, PhotoType, Job, ProjectName, Location, ImageUpload[0].path, user_id, createdDate, request, callback, devisionId)
           }
 
         } else {
           if (lastrecard.PhotoTypeId === 2) {
             if (PhotoType === 1) {
-              postCompanyMasterInsertFunction(CompanyType, ProjectType, PhotoType, Job, ProjectName, Location, ImageUpload[0].path, user_id, createdDate, request, callback)
+              postCompanyMasterInsertFunction(CompanyType, ProjectType, PhotoType, Job, ProjectName, Location, ImageUpload[0].path, user_id, createdDate, request, callback, devisionId)
             } else {
               return callback(null, "give startTime")
             }
@@ -212,7 +213,7 @@ module.exports = {
         if (PhotoType === 2 || PhotoType === 3) {
           return callback(null, "give startTime")
         } else {
-          postCompanyMasterInsertFunction(CompanyType, ProjectType, PhotoType, Job, ProjectName, Location, ImageUpload[0].path, user_id, createdDate, request, callback)
+          postCompanyMasterInsertFunction(CompanyType, ProjectType, PhotoType, Job, ProjectName, Location, ImageUpload[0].path, user_id, createdDate, request, callback, devisionId)
         }
       }
 
@@ -231,12 +232,13 @@ module.exports = {
       }
       const request = model.db.request();
 
-      let query = `SELECT  MBJ.Id,MBJ.CompanyType ,PTM.ProjectType,PTI.PhotoType,JSM.JobSheetId,PD.ProjectName,MBJ.Location,CONCAT('images/',  REPLACE(MBJ.ImageUpload, 'uploads\\', '')) AS ImageUpload,MBJ.IsActive,UMD.UserName,MBJ.CreatedDate,MBJ.ModifiedBy,MBJ.ModifiedDate,MBJ.EntryTime FROM MB_Jobsheet MBJ
+      let query = `SELECT  MBJ.Id,MBJ.CompanyType ,PTM.ProjectType,PTI.PhotoType,JSM.JobSheetId,PD.ProjectName,MBJ.Location,CONCAT('images/',  REPLACE(MBJ.ImageUpload, 'uploads\\', '')) AS ImageUpload,MBJ.IsActive,UMD.UserName,MBJ.CreatedDate,MBJ.ModifiedBy,MBJ.ModifiedDate,MBJ.EntryTime,DM.DivisionName FROM MB_Jobsheet MBJ
       LEFT JOIN ProjectTypeMaster PTM ON MBJ.ProjectTypeId = PTM.ProjectTypeId
       LEFT JOIN PhotoTypeID PTI ON MBJ.PhotoTypeId = PTI.PhotoTypeId
       LEFT JOIN JobSheetMaster JSM ON MBJ.JobId = JSM.JobSheetMasterId
       LEFT JOIN ProjectDetails PD ON MBJ.ProjectName = PD.ProjectId
       LEFT JOIN UserMasterDetail UMD ON MBJ.CreatedBy = UMD.Userid
+      LEFT JOIN DivisionMaster DM ON MBJ.DivisionId = DM.DivisionId
       WHERE CONVERT(DATE, MBJ.EntryTime) BETWEEN @startdate AND @enddate ORDER BY MBJ.Id`
 
       request
@@ -252,6 +254,31 @@ module.exports = {
       return callback(null, dateBetWeenDatas.recordset)
     } catch (err) {
       console.log(err)
+      return callback(err)
+    }
+  },
+
+  getDevisionDropdown: async (callback) => {
+    try {
+      const request = model.db.request();
+      let query = `SELECT * FROM DivisionMaster`;
+      const response = await request.query(query);
+      return callback(null, response.recordset);
+
+    } catch (err) {
+      return callback(err)
+    }
+  },
+  getJobsheetByDivisionID: async (params, callback) => {
+    try {
+      const divisionid = Number(params.id)
+      const request = model.db.request();
+      let query = `SELECT JobSheetMasterId ,JobSheetId, Location FROM JobSheetMaster where DivisionId =@DivisionId and ShowInMobile = 1`;
+      request.input('DivisionId', sql.Int, divisionid);
+      const response = await request.query(query);
+      return callback(null, response.recordset);
+
+    } catch (err) {
       return callback(err)
     }
   }
