@@ -5,8 +5,8 @@ dotenv.config();
 
 const config = {
     server: '97.74.83.13',
-    database: 'prod-shatechnosolutions',
-    // user: 'shatechno-proddev',
+    // database: 'prod-shatechnosolutions',
+    user: 'shatechno-proddev',
     // password: 'gXM5KMeAx',
 
     // database: 'dev.shatechno',

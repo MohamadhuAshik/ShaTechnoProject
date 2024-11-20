@@ -7,11 +7,11 @@ const { sendPushNotification } = require('../PushNotification/PushNotifiy');
 // const { postCompanyMaster } = require('./JobSheetCreation.controller');
 
 //[dbo].[MB_Jobsheet] insert Logic
-const postCompanyMasterInsertFunction = async (CompanyType, ProjectType, PhotoType, Job, ProjectName, Location, ImageUpload, user_id, createdDate, request, callback, devisionId) => {
+const postCompanyMasterInsertFunction = async (CompanyType, ProjectType, PhotoType, Job, ProjectName, Location, ImageUpload, user_id, createdDate, request, callback, devisionId, drivers) => {
   console.log("createdDate", createdDate)
 
-  let postquery = `insert into MB_Jobsheet (CompanyType,ProjectTypeId,PhotoTypeId,JobId,ProjectName,Location,ImageUpload,CreatedBy,createdDate,EntryTime,DivisionId) values (
-    @CompanyType, @projectTypeIdValue, @photoTypeIdvalue, @jobIdvalue, @ProjectName, @Location, @ImageUpload,@CreatedBy,@createdDateValue,@EntryTimeValue,@devisionId)`;
+  let postquery = `insert into MB_Jobsheet (CompanyType,ProjectTypeId,PhotoTypeId,JobId,ProjectName,Location,ImageUpload,CreatedBy,createdDate,EntryTime,DivisionId,Drivers) values (
+    @CompanyType, @projectTypeIdValue, @photoTypeIdvalue, @jobIdvalue, @ProjectName, @Location, @ImageUpload,@CreatedBy,@createdDateValue,@EntryTimeValue,@devisionId,@drivers)`;
 
   request
     .input('CompanyType', sql.VarChar(50), CompanyType)
@@ -25,6 +25,7 @@ const postCompanyMasterInsertFunction = async (CompanyType, ProjectType, PhotoTy
     .input("createdDateValue", moment().format('YYYY-MM-DD HH:mm:ss'))
     .input("EntryTimeValue", createdDate)
     .input("devisionId", sql.Int, devisionId)
+    .input("drivers", sql.VarChar(100), drivers)
 
 
   const response = await request.query(postquery);
@@ -122,7 +123,7 @@ module.exports = {
 
   postCompanyMaster: async (data, callback) => {
     try {
-      const { CompanyType, ProjectType, PhotoType, Job, ProjectName, Location, ImageUpload, user_id, devisionId } = data
+      const { CompanyType, ProjectType, PhotoType, Job, ProjectName, Location, ImageUpload, user_id, devisionId, drivers } = data
 
       const request = model.db.request();
 
@@ -154,7 +155,7 @@ module.exports = {
 
             //user enterstarttime after 8pm
             if (currentHour >= 20) {
-              return postCompanyMasterInsertFunction(CompanyType, ProjectType, PhotoType, Job, ProjectName, Location, ImageUpload[0].path, user_id, createdDate, request, callback, devisionId)
+              return postCompanyMasterInsertFunction(CompanyType, ProjectType, PhotoType, Job, ProjectName, Location, ImageUpload[0].path, user_id, createdDate, request, callback, devisionId, drivers)
             } else {
               return callback(null, "Record exists");
             }
@@ -162,7 +163,7 @@ module.exports = {
 
           if (lastrecard.PhotoTypeId === 2 && PhotoType === 1) {
 
-            return postCompanyMasterInsertFunction(CompanyType, ProjectType, PhotoType, Job, ProjectName, Location, ImageUpload[0].path, user_id, createdDate, request, callback, devisionId)
+            return postCompanyMasterInsertFunction(CompanyType, ProjectType, PhotoType, Job, ProjectName, Location, ImageUpload[0].path, user_id, createdDate, request, callback, devisionId, drivers)
           }
 
           if (lastrecard.PhotoTypeId === 2 && PhotoType === 3) {
@@ -171,7 +172,7 @@ module.exports = {
 
           if (lastrecard.PhotoTypeId === 3 && PhotoType === 2) {
 
-            return postCompanyMasterInsertFunction(CompanyType, ProjectType, PhotoType, Job, ProjectName, Location, ImageUpload[0].path, user_id, createdDate, request, callback, devisionId)
+            return postCompanyMasterInsertFunction(CompanyType, ProjectType, PhotoType, Job, ProjectName, Location, ImageUpload[0].path, user_id, createdDate, request, callback, devisionId, drivers)
           }
 
           if (lastrecard.PhotoTypeId === 3 && PhotoType === 1) {
@@ -180,7 +181,7 @@ module.exports = {
 
           if (lastrecard.PhotoTypeId === 3 && PhotoType === 3) {
 
-            return postCompanyMasterInsertFunction(CompanyType, ProjectType, PhotoType, Job, ProjectName, Location, ImageUpload[0].path, user_id, createdDate, request, callback, devisionId)
+            return postCompanyMasterInsertFunction(CompanyType, ProjectType, PhotoType, Job, ProjectName, Location, ImageUpload[0].path, user_id, createdDate, request, callback, devisionId, drivers)
           }
 
           if (lastrecard.PhotoTypeId === 2 && PhotoType === 2) {
@@ -188,16 +189,16 @@ module.exports = {
           }
 
           if (lastrecard.PhotoTypeId === 1 && PhotoType === 3) {
-            postCompanyMasterInsertFunction(CompanyType, ProjectType, PhotoType, Job, ProjectName, Location, ImageUpload[0].path, user_id, createdDate, request, callback, devisionId)
+            postCompanyMasterInsertFunction(CompanyType, ProjectType, PhotoType, Job, ProjectName, Location, ImageUpload[0].path, user_id, createdDate, request, callback, devisionId, drivers)
           }
           if (lastrecard.PhotoTypeId === 1 && PhotoType === 2) {
-            postCompanyMasterInsertFunction(CompanyType, ProjectType, PhotoType, Job, ProjectName, Location, ImageUpload[0].path, user_id, createdDate, request, callback, devisionId)
+            postCompanyMasterInsertFunction(CompanyType, ProjectType, PhotoType, Job, ProjectName, Location, ImageUpload[0].path, user_id, createdDate, request, callback, devisionId, drivers)
           }
 
         } else {
           if (lastrecard.PhotoTypeId === 2) {
             if (PhotoType === 1) {
-              postCompanyMasterInsertFunction(CompanyType, ProjectType, PhotoType, Job, ProjectName, Location, ImageUpload[0].path, user_id, createdDate, request, callback, devisionId)
+              postCompanyMasterInsertFunction(CompanyType, ProjectType, PhotoType, Job, ProjectName, Location, ImageUpload[0].path, user_id, createdDate, request, callback, devisionId, drivers)
             } else {
               return callback(null, "give startTime")
             }
@@ -213,7 +214,7 @@ module.exports = {
         if (PhotoType === 2 || PhotoType === 3) {
           return callback(null, "give startTime")
         } else {
-          postCompanyMasterInsertFunction(CompanyType, ProjectType, PhotoType, Job, ProjectName, Location, ImageUpload[0].path, user_id, createdDate, request, callback, devisionId)
+          postCompanyMasterInsertFunction(CompanyType, ProjectType, PhotoType, Job, ProjectName, Location, ImageUpload[0].path, user_id, createdDate, request, callback, devisionId, drivers)
         }
       }
 
