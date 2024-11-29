@@ -234,12 +234,13 @@ module.exports = {
       }
       const request = model.db.request();
 
-      let query = `SELECT  MBJ.Id,MBJ.CompanyType ,PTM.ProjectType,PTI.PhotoType,JSM.JobSheetId,PD.ProjectName,MBJ.Location,CONCAT('images/',  REPLACE(MBJ.ImageUpload, 'uploads\\', '')) AS ImageUpload,MBJ.IsActive,UMD.UserName,MBJ.CreatedDate,MBJ.ModifiedBy,MBJ.ModifiedDate,MBJ.EntryTime,DM.DivisionName FROM MB_Jobsheet MBJ
+      let query = `SELECT  MBJ.Id,MBJ.CompanyType ,PTM.ProjectType,PTI.PhotoType,JSM.JobSheetId,PD.ProjectName,MBJ.Location,CONCAT('images/',  REPLACE(MBJ.ImageUpload, 'uploads\\', '')) AS ImageUpload,MBJ.IsActive,UMD.UserName,AM.AdminName as Name ,MBJ.CreatedDate,MBJ.ModifiedBy,MBJ.ModifiedDate,MBJ.EntryTime,DM.DivisionName FROM MB_Jobsheet MBJ
       LEFT JOIN ProjectTypeMaster PTM ON MBJ.ProjectTypeId = PTM.ProjectTypeId
       LEFT JOIN PhotoTypeID PTI ON MBJ.PhotoTypeId = PTI.PhotoTypeId
       LEFT JOIN JobSheetMaster JSM ON MBJ.JobId = JSM.JobSheetMasterId
       LEFT JOIN ProjectDetails PD ON MBJ.ProjectName = PD.ProjectId
       LEFT JOIN UserMasterDetail UMD ON MBJ.CreatedBy = UMD.Userid
+      LEFT JOIN AdminMaster AM ON UMD.Userid = AM.AdminId
       LEFT JOIN DivisionMaster DM ON MBJ.DivisionId = DM.DivisionId
       WHERE CONVERT(DATE, MBJ.EntryTime) BETWEEN @startdate AND @enddate ORDER BY MBJ.Id`
 

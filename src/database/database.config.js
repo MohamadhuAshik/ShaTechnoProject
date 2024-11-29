@@ -1,4 +1,3 @@
-
 const mssql = require("mssql");
 const dotenv = require('dotenv')
 dotenv.config();
@@ -21,7 +20,6 @@ const config = {
         enableArithAbort: true,
         encrypt: false,
         trustServerCertificate: true,
-
     }
 }
 
