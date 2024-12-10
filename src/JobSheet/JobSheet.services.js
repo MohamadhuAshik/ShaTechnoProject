@@ -135,7 +135,7 @@ module.exports = {
 
       console.log("createdDateInner", createdDate)
 
-      let query = `Select CreatedBy,EntryTime ,ProjectTypeId,CompanyType,PhotoTypeId from MB_Jobsheet where CreatedBy = @user_id And CONVERT(DATE, EntryTime) = @createdDate order by Id`
+      let query = `Select CreatedBy,EntryTime ,ProjectTypeId,CompanyType,PhotoTypeId,JobId,ProjectName from MB_Jobsheet where CreatedBy = @user_id And CONVERT(DATE, EntryTime) = @createdDate order by Id`
 
       request
         .input("user_id", user_id)
@@ -148,8 +148,9 @@ module.exports = {
         console.log("lastrecard", lastrecard)
 
         if (lastrecard.ProjectTypeId === ProjectType) {
+          console.log("lastrecard", lastrecard)
 
-          if (lastrecard.PhotoTypeId === 1 && PhotoType === 1) {
+          if (lastrecard.PhotoTypeId === 1 && PhotoType === 1 && lastrecard.JobId === Job && lastrecard.ProjectName === ProjectName) {
             const dateObject = new Date(createdDate.replace(' ', 'T'));
             console.log("dateObject", dateObject)
             const currentHour = dateObject.getHours();
@@ -162,8 +163,15 @@ module.exports = {
             }
           }
 
-          if (lastrecard.PhotoTypeId === 2 && PhotoType === 1) {
+          if (lastrecard.PhotoTypeId === 1 && PhotoType === 1 && lastrecard.JobId !== Job) {
+            console.log("hii")
+            return callback(null, "Enter correct JOBID");
+          }
+          if (lastrecard.PhotoTypeId === 1 && PhotoType === 1 && lastrecard.ProjectName !== ProjectName) {
+            return callback(null, "Enter correct PROJECTNAME");
+          }
 
+          if (lastrecard.PhotoTypeId === 2 && PhotoType === 1) {
             return postCompanyMasterInsertFunction(CompanyType, ProjectType, PhotoType, Job, ProjectName, Location, ImageUpload[0].path, user_id, createdDate, request, callback, devisionId, drivers)
           }
 
@@ -171,34 +179,65 @@ module.exports = {
             return callback(null, "give startTime")
           }
 
-          if (lastrecard.PhotoTypeId === 3 && PhotoType === 2) {
+          if (lastrecard.PhotoTypeId === 3 && PhotoType === 2 && lastrecard.JobId === Job && lastrecard.ProjectName === ProjectName) {
 
             return postCompanyMasterInsertFunction(CompanyType, ProjectType, PhotoType, Job, ProjectName, Location, ImageUpload[0].path, user_id, createdDate, request, callback, devisionId, drivers)
+          }
+
+          if (lastrecard.PhotoTypeId === 3 && PhotoType === 2 && lastrecard.JobId !== Job) {
+            return callback(null, "Enter correct JOBID");
+          }
+          if (lastrecard.PhotoTypeId === 3 && PhotoType === 2 && lastrecard.ProjectName !== ProjectName) {
+            return callback(null, "Enter correct PROJECTNAME");
           }
 
           if (lastrecard.PhotoTypeId === 3 && PhotoType === 1) {
             return callback(null, "Record exists")
           }
 
-          if (lastrecard.PhotoTypeId === 3 && PhotoType === 3) {
-
+          if (lastrecard.PhotoTypeId === 3 && PhotoType === 3 && lastrecard.JobId === Job && lastrecard.ProjectName === ProjectName) {
             return postCompanyMasterInsertFunction(CompanyType, ProjectType, PhotoType, Job, ProjectName, Location, ImageUpload[0].path, user_id, createdDate, request, callback, devisionId, drivers)
+          }
+
+          if (lastrecard.PhotoTypeId === 3 && PhotoType === 3 && lastrecard.JobId !== Job) {
+            return callback(null, "Enter correct JOBID");
+          }
+          if (lastrecard.PhotoTypeId === 3 && PhotoType === 3 && lastrecard.ProjectName !== ProjectName) {
+            return callback(null, "Enter correct PROJECTNAME");
           }
 
           if (lastrecard.PhotoTypeId === 2 && PhotoType === 2) {
             return callback(null, "give startTime")
           }
 
-          if (lastrecard.PhotoTypeId === 1 && PhotoType === 3) {
+
+          if (lastrecard.PhotoTypeId === 1 && PhotoType === 3 && lastrecard.JobId === Job && lastrecard.ProjectName === ProjectName) {
             postCompanyMasterInsertFunction(CompanyType, ProjectType, PhotoType, Job, ProjectName, Location, ImageUpload[0].path, user_id, createdDate, request, callback, devisionId, drivers)
           }
-          if (lastrecard.PhotoTypeId === 1 && PhotoType === 2) {
+          if (lastrecard.PhotoTypeId === 1 && PhotoType === 3 && lastrecard.JobId !== Job) {
+            return callback(null, "Enter correct JOBID");
+          }
+          if (lastrecard.PhotoTypeId === 1 && PhotoType === 3 && lastrecard.ProjectName !== ProjectName) {
+            return callback(null, "Enter correct PROJECTNAME");
+          }
+
+          if (lastrecard.PhotoTypeId === 1 && PhotoType === 2 && lastrecard.JobId === Job && lastrecard.ProjectName === ProjectName) {
             postCompanyMasterInsertFunction(CompanyType, ProjectType, PhotoType, Job, ProjectName, Location, ImageUpload[0].path, user_id, createdDate, request, callback, devisionId, drivers)
           }
+
+
+          if (lastrecard.PhotoTypeId === 1 && PhotoType === 2 && lastrecard.JobId !== Job) {
+            return callback(null, "Enter correct JOBID");
+          }
+          if (lastrecard.PhotoTypeId === 1 && PhotoType === 2 && lastrecard.ProjectName !== ProjectName) {
+            return callback(null, "Enter correct PROJECTNAME");
+          }
+
 
         } else {
           if (lastrecard.PhotoTypeId === 2) {
             if (PhotoType === 1) {
+
               postCompanyMasterInsertFunction(CompanyType, ProjectType, PhotoType, Job, ProjectName, Location, ImageUpload[0].path, user_id, createdDate, request, callback, devisionId, drivers)
             } else {
               return callback(null, "give startTime")

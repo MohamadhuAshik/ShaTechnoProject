@@ -70,6 +70,18 @@ module.exports = {
                     message: "Already you enter start time"
                 })
             }
+            else if (result === "Enter correct JOBID") {
+                return res.status(409).json({
+                    success: 0,
+                    message: "Please Select Valid JOB_ID"
+                })
+            }
+            else if (result === "Enter correct PROJECTNAME") {
+                return res.status(409).json({
+                    success: 0,
+                    message: "Please Select Valid PROJECT_NAME"
+                })
+            }
             else if (result == "give startTime") {
                 return res.status(403).json({
                     success: 0,
@@ -80,7 +92,7 @@ module.exports = {
             else if (result == "Enter Different ProjectName") {
                 return res.status(403).json({
                     success: 0,
-                    message: "Plese select the valid project name"
+                    message: "Plese select the valid project Type"
                 })
             }
 
