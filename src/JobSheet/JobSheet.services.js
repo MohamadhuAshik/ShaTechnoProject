@@ -133,13 +133,14 @@ module.exports = {
 
       const createdDate = ImageUpload[0].dateTime
 
-      console.log("createdDateInner", createdDate)
+      // console.log("createdDateInner", createdDate)
 
       let query = `Select CreatedBy,EntryTime ,ProjectTypeId,CompanyType,PhotoTypeId,JobId,ProjectName from MB_Jobsheet where CreatedBy = @user_id And CONVERT(DATE, EntryTime) = @createdDate order by Id`
 
       request
         .input("user_id", user_id)
         .input("createdDate", createdDate.split(" ")[0])
+      // .input("createdDate", moment().add(16, 'hours').format('YYYY-MM-DD HH:mm:ss'))
       const firstCheckResponse = await request.query(query);
 
       if (firstCheckResponse.recordset.length > 0) {
@@ -152,11 +153,25 @@ module.exports = {
 
           if (lastrecard.PhotoTypeId === 1 && PhotoType === 1 && lastrecard.JobId === Job && lastrecard.ProjectName === ProjectName) {
             const dateObject = new Date(createdDate.replace(' ', 'T'));
+            // const currentDate = moment().add(16, 'hours').format('YYYY-MM-DD HH:mm:ss')
+            // const currentDate = moment().format('YYYY-MM-DD HH:mm:ss')
+
+            // console.log("currentDate", currentDate)
             console.log("dateObject", dateObject)
+
             const currentHour = dateObject.getHours();
+            const currentMinute = dateObject.getMinutes()
+            const currentSecond = dateObject.getSeconds()
+            // const currentHour = moment().hours();
+            // const currentSecond = moment().second()
+            // const currentMinute = moment().minute()
+            // console.log("currentHour", currentHour)
+            // console.log("currentMinute", currentMinute)
+            // console.log("currentSecond", currentSecond)
 
             //user enterstarttime after 8pm
-            if (currentHour >= 20) {
+            // if (currentHour >= 20) 
+            if (currentHour > 20 || (currentHour === 20 && currentMinute >= 0 && currentSecond >= 0)) {
               return postCompanyMasterInsertFunction(CompanyType, ProjectType, PhotoType, Job, ProjectName, Location, ImageUpload[0].path, user_id, createdDate, request, callback, devisionId, drivers)
             } else {
               return callback(null, "Record exists");
@@ -237,7 +252,6 @@ module.exports = {
         } else {
           if (lastrecard.PhotoTypeId === 2) {
             if (PhotoType === 1) {
-
               postCompanyMasterInsertFunction(CompanyType, ProjectType, PhotoType, Job, ProjectName, Location, ImageUpload[0].path, user_id, createdDate, request, callback, devisionId, drivers)
             } else {
               return callback(null, "give startTime")
@@ -247,11 +261,9 @@ module.exports = {
             return callback(null, "Enter Different ProjectName")
           }
         }
-
-
-
       } else {
         if (PhotoType === 2 || PhotoType === 3) {
+          console.log("hii")
           return callback(null, "give startTime")
         } else {
           postCompanyMasterInsertFunction(CompanyType, ProjectType, PhotoType, Job, ProjectName, Location, ImageUpload[0].path, user_id, createdDate, request, callback, devisionId, drivers)
